@@ -1,15 +1,17 @@
-import React from 'react'
+import React, { Fragment } from 'react'
 import { render } from 'react-dom'
 import { Provider } from 'react-redux'
 import { AppContainer as ReactHotAppContainer } from 'react-hot-loader'
+import { hot } from 'react-hot-loader/root'
 import { PersistGate } from 'redux-persist/integration/react'
 import { ThemeProvider } from 'styled-components'
+import './index.css'
 
 import { store, persistor } from './Config'
 
 import App from './Routes'
 
-const AppContainer = process.env.PLAIN_HMR ? Fragment : ReactHotAppContainer
+const AppContainer = process.env.START_HOT ? Fragment : ReactHotAppContainer
 
 const theme = {
     colors: {
@@ -26,17 +28,23 @@ const theme = {
 }
 
 const MainComponent = () => (
+    <Provider store={store}>
+        <PersistGate loading={null} persistor={persistor}>
+            <ThemeProvider theme={theme}>
+                <App />
+            </ThemeProvider>
+        </PersistGate>
+    </Provider>
+)
+
+const Hot = hot(MainComponent)
+
+const MainComponentWrapper = () => (
     <AppContainer>
-        <Provider store={store}>
-            <PersistGate loading={null} persistor={persistor}>
-                <ThemeProvider theme={theme}>
-                    <App />
-                </ThemeProvider>
-            </PersistGate>
-        </Provider>
+        <Hot />
     </AppContainer>
 )
 
 document.addEventListener('DOMContentLoaded', () =>
-    render(<MainComponent />, document.getElementById('root'))
+    render(<MainComponentWrapper />, document.getElementById('root'))
 )

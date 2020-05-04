@@ -8,7 +8,6 @@ import Container from '../../Components/Container'
 import Flex from '../../Components/Container/Flex'
 import Icon from '../../Components/Icon'
 import Text from '../../Components/Text'
-// import Text from '../../Components/Text'
 // import Button from '../../Components/Button'
 
 const Label = styled.h1`
