@@ -1,0 +1,6 @@
+export const INITIALIZE = 'INITIALIZE'
+export const ACTION = 'ACTION'
+export const JOIN = 'JOIN'
+export const USER_JOINED = 'USER_JOINED'
+export const CHANNELS = 'CHANNELS'
+export const DISCONNECT = 'DISCONNECT'

@@ -8,14 +8,8 @@ import Container from '../../Components/Container'
 import Flex from '../../Components/Container/Flex'
 import Icon from '../../Components/Icon'
 import Text from '../../Components/Text'
+import { joinChannel } from '../../Actions/socketActions'
 // import Button from '../../Components/Button'
-
-const Label = styled.h1`
-    text-align: center;
-    font-size: 2.6em;
-    font-weight: bold;
-    color: ${({ theme }) => theme.colors.text};
-`
 
 class Home extends Component {
     constructor(props) {
@@ -25,18 +19,34 @@ class Home extends Component {
     }
 
     render = () => {
-        const { seasons } = this.props
-        // const now = new Date().getTime()
+        const { channels, dispatch } = this.props
         return (
             <Container alignItems="stretch">
-                <Label>Etcord is here to stay!!</Label>
+                {channels.map(item => (
+                    <>
+                        <Text
+                            onClick={() => dispatch(joinChannel(item.id))}
+                            key={item.id}
+                            clickable
+                            size={1.1}
+                            bold
+                        >
+                            {item.name}
+                        </Text>
+                        {item.users.map(user => (
+                            <Text key={user.id} style={{ marginLeft: '1em' }}>
+                                {user.name}
+                            </Text>
+                        ))}
+                    </>
+                ))}
             </Container>
         )
     }
 }
 
-Home.propTypes = {}
-
-const mapStateToProps = state => ({})
+const mapStateToProps = state => ({
+    channels: state.channels,
+})
 
 export default connect(mapStateToProps)(Home)
