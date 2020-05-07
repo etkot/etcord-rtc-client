@@ -2,7 +2,7 @@ import ConnectionManager from './ConnectionManager'
 import { utils } from './Types'
 
 const cm = new ConnectionManager()
-
+window.ConnectionManager = cm
 export const socketMiddleware = store => next => _action => {
     if (!_action.socket) {
         next(_action)

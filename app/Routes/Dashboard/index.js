@@ -12,6 +12,7 @@ import Flex from '../../Components/Container/Flex'
 import Icon from '../../Components/Icon'
 import Text from '../../Components/Text'
 import { joinChannel } from '../../Actions/socketActions'
+import Audio from '../../Components/Audio'
 // import Button from '../../Components/Button'
 
 const audioOutputs = [{ label: 'Default', value: '' }]
@@ -60,6 +61,7 @@ class Home extends Component {
 
     componentDidMount = () => {
         this.updateDeviceList()
+        ConnectionManager.ref = this
         navigator.mediaDevices.addEventListener('devicechange', this.updateDeviceList)
         const audio = document.getElementById('output')
         audio.srcObject = ConnectionManager.incomingAudioOutput.stream
@@ -128,16 +130,46 @@ class Home extends Component {
                         >
                             {item.name}
                         </Text>
-                        {item.users.map(user => (
-                            <Text key={user.id} style={{ marginLeft: '1em' }}>
-                                {user.name}
-                            </Text>
-                        ))}
+                        {item.users.map(user => {
+                            const renderVolume =
+                                ConnectionManager.socket &&
+                                user.id != ConnectionManager.socket.id &&
+                                ConnectionManager.incomingAudioNodes[user.id]
+                            return (
+                                <Text key={user.id} style={{ marginLeft: '1em' }}>
+                                    {user.name}
+                                    {renderVolume && (
+                                        <input
+                                            type="range"
+                                            defaultValue="1"
+                                            min="0"
+                                            max="2"
+                                            step="0.01"
+                                            onChange={e =>
+                                                (ConnectionManager.incomingAudioNodes[
+                                                    user.id
+                                                ].gain.gain.value = e.target.value)
+                                            }
+                                        />
+                                    )}
+                                </Text>
+                            )
+                        })}
                     </Fragment>
                 ))}
                 <Flex>
-                    <Container alignItems="stretch">
+                    <Container alignItems="stretch" style={{ maxWidth: '16em', margin: '1em' }}>
                         <Text>Input:</Text>
+                        <input
+                            type="range"
+                            defaultValue="1"
+                            min="0"
+                            max="2"
+                            step="0.01"
+                            onChange={e =>
+                                (ConnectionManager.outgoingAudioGain.gain.value = e.target.value)
+                            }
+                        />
                         <Select
                             styles={selectStyles}
                             options={this.state.audioInputs}
@@ -146,6 +178,16 @@ class Home extends Component {
                         />
 
                         <Text>Output:</Text>
+                        <input
+                            type="range"
+                            defaultValue="1"
+                            min="0"
+                            max="2"
+                            step="0.01"
+                            onChange={e =>
+                                (ConnectionManager.incomingAudioGain.gain.value = e.target.value)
+                            }
+                        />
                         <Select
                             styles={selectStyles}
                             options={this.state.audioOutputs}
@@ -155,6 +197,14 @@ class Home extends Component {
                     </Container>
                 </Flex>
                 <audio id="output" style={{ display: 'none' }} />
+
+                <Text>Input:</Text>
+                {ConnectionManager.outgoingAudioInput && (
+                    <Audio audio={ConnectionManager.outgoingAudioOutput.stream} />
+                )}
+
+                <Text>Output:</Text>
+                <Audio audio={ConnectionManager.incomingAudioOutput.stream} />
             </Container>
         )
     }

@@ -12,6 +12,8 @@ class ConnectionManager {
 
         this.peerConnections = {}
 
+        this.ref = null
+
         this.outgoingAudioContext = new AudioContext()
         this.outgoingAudioOutput = this.outgoingAudioContext.createMediaStreamDestination()
         this.outgoingAudioInput = null
@@ -19,20 +21,25 @@ class ConnectionManager {
 
         this.incomingAudioContext = new AudioContext()
         this.incomingAudioOutput = this.incomingAudioContext.createMediaStreamDestination()
+        this.incomingAudioGain = this.incomingAudioContext.createGain()
         this.incomingAudioNodes = {}
     }
 
     initialize = async () => {
         this.socket = socket(config.socket)
         this.socket.on(utils.ACTION, this.handleActions)
+
+        this.incomingAudioGain.connect(this.incomingAudioOutput)
+
+        this.incomingAudioGain.connect(this.incomingAudioContext.destination)
+
         const audioStream = await navigator.mediaDevices.getUserMedia({
             audio: { deviceId: '' },
             video: false,
         })
         this.outgoingAudioInput = this.outgoingAudioContext.createMediaStreamSource(audioStream)
-        this.outgoingAudioInput
-            .connect(this.outgoingAudioGain)
-            .connect(this.outgoingAudioContext.destination)
+        this.outgoingAudioInput.connect(this.outgoingAudioGain).connect(this.outgoingAudioOutput)
+        if (this.ref) this.ref.forceUpdate()
     }
 
     changeAudioInput = async id => {
@@ -41,11 +48,8 @@ class ConnectionManager {
             video: false,
         })
         if (this.outgoingAudioInput) this.outgoingAudioInput.disconnect()
-        this.outgoingAudioGain.disconnect()
         this.outgoingAudioInput = this.outgoingAudioContext.createMediaStreamSource(audioStream)
-        this.outgoingAudioInput
-            .connect(this.outgoingAudioGain)
-            .connect(this.outgoingAudioContext.destination)
+        this.outgoingAudioInput.connect(this.outgoingAudioGain)
     }
 
     getNodes = uid => {
@@ -54,6 +58,7 @@ class ConnectionManager {
                 input: null,
                 gain: this.incomingAudioContext.createGain(),
             }
+            this.incomingAudioNodes[uid].gain.connect(this.incomingAudioGain)
         }
 
         return this.incomingAudioNodes[uid]
@@ -72,12 +77,12 @@ class ConnectionManager {
             }
 
             this.peerConnections[uid].ontrack = ({ streams: [audio, video] }) => {
-                const { gain, input } = this.getNodes(uid)
-                if (input) input.disconnect()
-                gain.disconnect()
+                console.log(audio.getTracks())
+                const node = this.getNodes(uid)
+                if (node.input) node.input.disconnect()
 
-                input = this.incomingAudioContext.createMediaStreamSource(audio)
-                input.connect(gain).connect(this.incomingAudioContext.destination)
+                node.input = this.incomingAudioContext.createMediaStreamSource(audio)
+                node.input.connect(node.gain)
             }
 
             this.peerConnections[uid].onconnectionstatechange = event => {
@@ -85,6 +90,7 @@ class ConnectionManager {
                 switch (connectionState) {
                     case 'connected':
                         console.log(`Established connection with ${uid}`)
+                        if (this.ref) this.ref.forceUpdate()
                         break
                     case 'disconnected':
                     case 'failed':
