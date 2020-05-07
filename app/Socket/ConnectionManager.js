@@ -31,8 +31,6 @@ class ConnectionManager {
 
         this.incomingAudioGain.connect(this.incomingAudioOutput)
 
-        this.incomingAudioGain.connect(this.incomingAudioContext.destination)
-
         const audioStream = await navigator.mediaDevices.getUserMedia({
             audio: { deviceId: '' },
             video: false,
