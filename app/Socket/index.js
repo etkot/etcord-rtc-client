@@ -19,3 +19,5 @@ export const socketMiddleware = store => next => _action => {
             cm.dispatch(action)
     }
 }
+
+export default cm

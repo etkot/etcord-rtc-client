@@ -20,5 +20,3 @@ export const joinChannel = id => ({
         },
     },
 })
-
-export const addTrack = 'WIP'
